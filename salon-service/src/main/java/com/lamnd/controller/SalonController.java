@@ -7,6 +7,7 @@ import com.lamnd.dto.request.SalonCreateRequest;
 import com.lamnd.dto.request.SalonUpdateRequest;
 import com.lamnd.dto.response.SalonResponse;
 import com.lamnd.service.SalonService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class SalonController extends BaseController {
     private final SalonService salonService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<?>> createSalon(@RequestBody SalonCreateRequest request) {
+    public ResponseEntity<ApiResponse<?>> createSalon(@RequestBody @Valid SalonCreateRequest request) {
         UserDTO userDTO = UserDTO.builder()
                 .id(1L)
                 .build();
@@ -62,7 +63,7 @@ public class SalonController extends BaseController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> updateSalon(@PathVariable("id") Long id, @RequestBody SalonUpdateRequest request) {
+    public ResponseEntity<ApiResponse<?>> updateSalon(@PathVariable("id") Long id, @RequestBody @Valid SalonUpdateRequest request) {
         UserDTO userDTO = UserDTO.builder()
                 .id(1L)
                 .build();
