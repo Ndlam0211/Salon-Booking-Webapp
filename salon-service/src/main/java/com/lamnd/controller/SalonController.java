@@ -7,7 +7,6 @@ import com.lamnd.dto.request.SalonCreateRequest;
 import com.lamnd.dto.request.SalonUpdateRequest;
 import com.lamnd.dto.response.SalonResponse;
 import com.lamnd.service.SalonService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +46,7 @@ public class SalonController extends BaseController {
     }
 
     @GetMapping("/owner")
-    public ResponseEntity<ApiResponse<?>> getSalonByOwnerId(@PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<?>> getSalonByOwnerId() {
         UserDTO userDTO = UserDTO.builder()
                 .id(1L)
                 .build();
