@@ -1,13 +1,11 @@
-package com.lamnd.dto.response;
+package com.lamnd.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Builder;
 
 import java.util.List;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
-
-@JsonInclude(NON_NULL)
-public record SalonResponse(
+@Builder
+public record SalonDTO(
     Long id,
     String name,
     List<String> images,

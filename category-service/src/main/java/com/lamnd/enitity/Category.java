@@ -6,9 +6,12 @@ import jakarta.persistence.Table;
 import lombok.*;
 
 @Entity
-@Data
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "categories")
-public class Category {
+public class Category extends Auditable{
     @Column(nullable = false)
     private String name;
     private String image;

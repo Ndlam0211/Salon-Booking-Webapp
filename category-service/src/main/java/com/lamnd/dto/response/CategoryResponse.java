@@ -2,21 +2,12 @@ package com.lamnd.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import java.util.List;
-
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 @JsonInclude(NON_NULL)
-public record SalonResponse(
+public record CategoryResponse(
     Long id,
     String name,
-    List<String> images,
-    String address,
-    String phoneNumber,
-    String email,
-    String city,
-    Long ownerId,
-    String openingTime,
-    String closingTime
+    String image
 ) {
 }
