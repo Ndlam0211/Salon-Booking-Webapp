@@ -11,12 +11,12 @@ import org.mapstruct.*;
 public interface CategoryMapper extends BaseMapper<Category, CategoryResponse, CategoryCreateRequest, CategoryUpdateRequest> {
 
     @Override
-    @Mapping(target = "SalonId", ignore = true)
+    @Mapping(target = "salonId", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE) // Ignore null values
     Category toEntity(CategoryCreateRequest createRequest);
 
     @Override
-    @Mapping(target = "SalonId", ignore = true)
+    @Mapping(target = "salonId", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntityFromRequest(CategoryUpdateRequest updateRequest,@MappingTarget Category entity);
 }
