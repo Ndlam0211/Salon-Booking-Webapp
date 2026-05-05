@@ -5,6 +5,7 @@ import com.lamnd.dto.request.SalonCreateRequest;
 import com.lamnd.dto.request.SalonUpdateRequest;
 import com.lamnd.dto.response.SalonResponse;
 import com.lamnd.entity.Salon;
+import com.lamnd.exception.ResourceNotFoundException;
 import com.lamnd.mapper.SalonMapper;
 import com.lamnd.repository.SalonRepo;
 import com.lamnd.service.SalonService;
@@ -77,11 +78,11 @@ public class SalonServiceImpl implements SalonService {
 
     private Salon findSalonById(Long salonId) {
         return salonRepo.findById(salonId)
-                .orElseThrow(() -> new RuntimeException("Salon not found with id: " + salonId));
+                .orElseThrow(() -> new ResourceNotFoundException("Salon", "id", salonId));
     }
 
     private Salon findSalonByOwnerId(Long ownerId) {
         return salonRepo.findByOwnerId(ownerId)
-                .orElseThrow(() -> new RuntimeException("Salon not found for owner id: " + ownerId));
+                .orElseThrow(() -> new ResourceNotFoundException("Salon", "owner id", ownerId));
     }
 }
