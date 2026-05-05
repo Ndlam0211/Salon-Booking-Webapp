@@ -4,6 +4,7 @@ import com.lamnd.dto.SalonDTO;
 import com.lamnd.dto.request.CategoryCreateRequest;
 import com.lamnd.dto.response.CategoryResponse;
 import com.lamnd.enitity.Category;
+import com.lamnd.exception.ResourceNotFoundException;
 import com.lamnd.mapper.CategoryMapper;
 import com.lamnd.repository.CategoryRepo;
 import com.lamnd.service.Categoryservice;
@@ -59,6 +60,6 @@ public class CategoryServiceImpl implements Categoryservice {
 
     private Category findCategoryById(Long categoryId) {
         return categoryRepo.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
     }
 }
