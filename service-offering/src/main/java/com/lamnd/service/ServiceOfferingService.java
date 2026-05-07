@@ -19,4 +19,6 @@ public interface ServiceOfferingService {
     Set<ServiceOfferingResponse> getAllServiceOfferingsBySalonId(Long salonId, Long categoryId);
 
     Set<ServiceOfferingResponse> getServiceOfferingsByIds(Set<Long> ids);
+
+    ServiceOfferingResponse getServiceOfferingById(Long id);
 }
