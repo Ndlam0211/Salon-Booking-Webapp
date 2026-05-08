@@ -6,6 +6,7 @@ import com.lamnd.dto.ServiceDTO;
 import com.lamnd.dto.UserDTO;
 import com.lamnd.dto.request.BookingCreateRequest;
 import com.lamnd.dto.response.BookingResponse;
+import com.lamnd.dto.response.BookingSlotResponse;
 import com.lamnd.enums.BookingStatus;
 
 import java.time.LocalDate;
@@ -22,6 +23,6 @@ public interface BookingService {
     List<BookingResponse> getBookingsBySalonId(Long salonId);
     BookingResponse getBookingById(Long bookingId);
     BookingResponse updateBookingStatus(Long bookingId, BookingStatus status);
-    List<BookingResponse> getBookingByDate(LocalDate date, Long salonId);
+    List<BookingSlotResponse> getBookingByDate(LocalDate date, Long salonId);
     SalonReport getSalonReport(Long salonId);
 }

@@ -6,6 +6,7 @@ import com.lamnd.dto.ServiceDTO;
 import com.lamnd.dto.UserDTO;
 import com.lamnd.dto.request.BookingCreateRequest;
 import com.lamnd.dto.response.BookingResponse;
+import com.lamnd.dto.response.BookingSlotResponse;
 import com.lamnd.entity.Booking;
 import com.lamnd.enums.BookingStatus;
 import com.lamnd.mapper.BookingMapper;
@@ -95,16 +96,24 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingResponse> getBookingByDate(LocalDate date, Long salonId) {
+    public List<BookingSlotResponse> getBookingByDate(LocalDate date, Long salonId) {
         List<BookingResponse> bookings = getBookingsBySalonId(salonId);
 
         if(date == null) {
-            return bookings;
+            return bookings.stream()
+                    .map(booking -> BookingSlotResponse.builder()
+                            .startTime(booking.startTime())
+                            .endTime(booking.endTime())
+                            .build()).toList();
         }
 
         return bookings.stream()
                 .filter(booking -> isSameDate(booking.startTime(), date) ||
                         isSameDate(booking.endTime(), date))
+                .map(booking -> BookingSlotResponse.builder()
+                        .startTime(booking.startTime())
+                        .endTime(booking.endTime())
+                        .build())
                 .toList();
     }
 
@@ -129,15 +138,13 @@ public class BookingServiceImpl implements BookingService {
                 .sum();
 
 
-        SalonReport report = SalonReport.builder()
+        return SalonReport.builder()
                 .salonId(salonId)
                 .totalBookings(totalBookings)
                 .totalEarnings(totalEarnings)
                 .cancelledBookings(cancelledBookings.size())
                 .totalRefund(totalRefund)
                 .build();
-
-        return report;
     }
 
     private boolean isSameDate(LocalDateTime localDateTime, LocalDate date) {
