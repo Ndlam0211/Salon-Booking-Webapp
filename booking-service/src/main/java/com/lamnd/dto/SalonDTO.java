@@ -2,6 +2,7 @@ package com.lamnd.dto;
 
 import lombok.Builder;
 
+import java.time.LocalTime;
 import java.util.List;
 
 @Builder
@@ -14,7 +15,7 @@ public record SalonDTO(
     String email,
     String city,
     Long ownerId,
-    String openingTime,
-    String closingTime
+    LocalTime openingTime,
+    LocalTime closingTime
 ) {
 }

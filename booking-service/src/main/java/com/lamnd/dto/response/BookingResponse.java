@@ -15,6 +15,6 @@ public record BookingResponse(
         LocalDateTime startTime,
         LocalDateTime endTime,
         BookingStatus status,
-        int totalPrice
+        Double totalPrice
 ) {
 }

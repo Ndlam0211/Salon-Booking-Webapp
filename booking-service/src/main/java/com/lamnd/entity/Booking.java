@@ -28,5 +28,5 @@ public class Booking extends Auditable{
     private Set<Long> serviceIds;
 
     private BookingStatus status = BookingStatus.PENDING;
-    private int totalPrice;
+    private Double totalPrice;
 }
