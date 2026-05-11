@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,6 +41,8 @@ public class BookingController extends BaseController {
 
         SalonDTO salon = SalonDTO.builder()
                 .id(salonId)
+                .openingTime(LocalTime.now())
+                .closingTime(LocalTime.now().plusHours(12))
                 .build();
 
         Set<ServiceDTO> services = new HashSet<>();
