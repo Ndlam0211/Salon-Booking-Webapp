@@ -5,20 +5,18 @@ import com.lamnd.enums.PaymentStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Setter
 @Getter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "payments")
 public class Payment extends Auditable{
     @Column(nullable = false)
-    private Long amount;
+    private Double amount;
 
     @Column(nullable = false)
     private PaymentStatus status = PaymentStatus.PENDING;
