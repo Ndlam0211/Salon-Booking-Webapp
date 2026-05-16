@@ -25,3 +25,8 @@ eureka:
     register-with-eureka: true
     service-url:
       defaultZone: "http://localhost:8070/eureka/"
+
+idp:
+  url: http://localhost:8180
+  client-id: salon-booking-client
+  client-secret: votUargvpeTCCxb6xX8KCMtT9bHxtj2L
