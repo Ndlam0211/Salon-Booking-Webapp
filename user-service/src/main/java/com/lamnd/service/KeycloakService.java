@@ -24,7 +24,8 @@ public class KeycloakService {
     private final KeycloakConfig keycloakConfig;
 
     public void register(RegistrationRequest request){
-        String ACCESS_TOKEN = getAdminAccessToken().getAccessToken();
+        String ACCESS_TOKEN = getAccessToken(request.username(),
+                request.password(), "password", null).getAccessToken();
 
         // map keycloak user create from request
         KeycloakUserCreationRequest keycloakUser = KeycloakUserCreationRequest.builder()
@@ -80,11 +81,15 @@ public class KeycloakService {
 
     }
 
-    public TokenResponse getAdminAccessToken() {
+    public TokenResponse getAccessToken(String username,
+                                             String password,
+                                             String grantType,
+                                             String refreshToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<MultiValueMap<String, String>> requestEntity = getMultiValueMapHttpEntity(headers);
+        HttpEntity<MultiValueMap<String, String>> requestEntity = getMultiValueMapHttpEntity(headers,
+                username, password, grantType, refreshToken);
 
         // call keycloak api to get access token
         ResponseEntity<TokenResponse> response = restTemplate.exchange(
@@ -104,14 +109,18 @@ public class KeycloakService {
         }
     }
 
-    private HttpEntity<MultiValueMap<String, String>> getMultiValueMapHttpEntity(HttpHeaders headers) {
+    private HttpEntity<MultiValueMap<String, String>> getMultiValueMapHttpEntity(HttpHeaders headers,
+                                                                                 String username,
+                                                                                 String password,
+                                                                                 String grantType,
+                                                                                 String refreshToken) {
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
         requestBody.add("client_id", keycloakConfig.getKeycloakClienId());
         requestBody.add("client_secret", keycloakConfig.getKeycloakClienSecret());
-        requestBody.add("grant_type", keycloakConfig.getGrantType());
         requestBody.add("scope", keycloakConfig.getScope());
-        requestBody.add("username", keycloakConfig.getUsername());
-        requestBody.add("password", keycloakConfig.getPassword());
+        requestBody.add("grant_type", grantType);
+        requestBody.add("username", username);
+        requestBody.add("password", password);
 
         return new HttpEntity<>(requestBody, headers);
     }

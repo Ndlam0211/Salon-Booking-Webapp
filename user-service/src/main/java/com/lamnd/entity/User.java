@@ -1,5 +1,6 @@
 package com.lamnd.entity;
 
+import com.lamnd.enums.UserRole;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -29,5 +30,5 @@ public class User extends Auditable {
     private String fullName;
     @Column(name = "phone_number")
     private String phoneNumber;
-    private String role;
+    private UserRole role;
 }
