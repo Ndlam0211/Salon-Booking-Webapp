@@ -1,8 +1,7 @@
 package com.lamnd.service;
 
 import com.lamnd.config.KeycloakConfig;
-import com.lamnd.dto.identity.Credential;
-import com.lamnd.dto.identity.KeycloakUserCreationRequest;
+import com.lamnd.dto.identity.*;
 import com.lamnd.dto.request.RegistrationRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
@@ -50,6 +49,22 @@ public class KeycloakService {
                 requestEntity,
                 String.class
         );
+
+        if (response.getStatusCode() == HttpStatus.CREATED) {
+
+        }
+
+    }
+
+    public TokenResponse getAdminAccessToken() {
+        return null;
+    }
+
+    public KeycloakRole getRoleByName(String token, String role) {
+        return null;
+    }
+
+    public KeycloakUserDTO fetchFirstUserByUsername(String username, String token) {
 
     }
 }
