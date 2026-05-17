@@ -4,13 +4,17 @@ import com.lamnd.config.KeycloakConfig;
 import com.lamnd.dto.identity.*;
 import com.lamnd.dto.request.RegistrationRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class KeycloakService {
@@ -51,6 +55,8 @@ public class KeycloakService {
                 String.class
         );
 
+        log.info("Create user response from Keycloak: {}", response);
+
         // if create keycloak user successfully then assign role to the user
         if (response.getStatusCode() == HttpStatus.CREATED) {
             // fetch user just created to get user id
@@ -74,7 +80,37 @@ public class KeycloakService {
     }
 
     public TokenResponse getAdminAccessToken() {
-        return new TokenResponse();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<MultiValueMap<String, String>> requestEntity = getMultiValueMapHttpEntity(headers);
+
+        // call keycloak api to get access token
+        ResponseEntity<TokenResponse> response = restTemplate.exchange(
+                keycloakConfig.getKeycloakTokenAPI(),
+                HttpMethod.POST,
+                requestEntity,
+                TokenResponse.class
+        );
+
+        // if get access token successfully then return the token response, otherwise throw an exception
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            return response.getBody();
+        } else {
+            throw new RuntimeException("Failed to get access token from Keycloak: " + response.getBody());
+        }
+    }
+
+    private HttpEntity<MultiValueMap<String, String>> getMultiValueMapHttpEntity(HttpHeaders headers) {
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("client_id", keycloakConfig.getKeycloakClienId());
+        requestBody.add("client_secret", keycloakConfig.getKeycloakClienSecret());
+        requestBody.add("grant_type", keycloakConfig.getGrantType());
+        requestBody.add("scope", keycloakConfig.getScope());
+        requestBody.add("username", keycloakConfig.getUsername());
+        requestBody.add("password", keycloakConfig.getPassword());
+
+        return new HttpEntity<>(requestBody, headers);
     }
 
     public KeycloakRole getRoleByName(String clientId, String token, String role) {
