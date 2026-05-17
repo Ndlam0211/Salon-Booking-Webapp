@@ -159,6 +159,7 @@ public class KeycloakService {
                 KeycloakUserDTO[].class
         );
 
+        log.info("Fetch user by username response from Keycloak: {}", response);
 
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
             KeycloakUserDTO[] users =  response.getBody();
@@ -174,6 +175,28 @@ public class KeycloakService {
     }
 
     public void assignRoleToUser(String userId, String clientId, List<KeycloakRole> roles, String token) {
+        // keycloak api to assign role to user: POST /admin/realms/{realm}/users/{id}/role-mappings/clients/{clientId}
+        String url = String.format("%s/admin/realms/master/users/%s/role-mappings/clients/%s", keycloakConfig.getKeycloakBaseURL(), userId, clientId);
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+
+        HttpEntity<List<KeycloakRole>> requestEntity = new HttpEntity<>(roles, headers);
+
+        try {
+            // call keycloak api to assign role to user
+            ResponseEntity<Void> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    requestEntity,
+                    Void.class
+            );
+
+            log.info("Assign role to user response from Keycloak: {}", response);
+        } catch (Exception e) {
+            log.error("Error while assigning role to user in Keycloak: {}", e.getMessage());
+            throw new RuntimeException("Failed to assign role to user in Keycloak: " + e.getMessage());
+        }
     }
 }
