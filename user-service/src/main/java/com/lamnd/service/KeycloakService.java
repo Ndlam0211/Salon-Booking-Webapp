@@ -8,6 +8,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,7 +19,7 @@ public class KeycloakService {
     private final KeycloakConfig keycloakConfig;
 
     public void register(RegistrationRequest request){
-        String ACCESS_TOKEN = "";
+        String ACCESS_TOKEN = getAdminAccessToken().getAccessToken();
 
         // map keycloak user create from request
         KeycloakUserCreationRequest keycloakUser = KeycloakUserCreationRequest.builder()
@@ -50,21 +51,41 @@ public class KeycloakService {
                 String.class
         );
 
+        // if create keycloak user successfully then assign role to the user
         if (response.getStatusCode() == HttpStatus.CREATED) {
+            // fetch user just created to get user id
+            KeycloakUserDTO user = fetchFirstUserByUsername(request.username(), ACCESS_TOKEN);
 
+            // get role by name then assign to user
+            KeycloakRole role = getRoleByName(keycloakConfig.getClientId(), ACCESS_TOKEN, request.role().toString());
+
+            List<KeycloakRole> roles = new ArrayList<>();
+            roles.add(role);
+
+            // assign role to user
+            assignRoleToUser(user.getId(),
+                    keycloakConfig.getClientId(),
+                    roles,
+                    ACCESS_TOKEN);
+        } else {
+            throw new RuntimeException("Failed to create user in Keycloak: " + response.getBody());
         }
 
     }
 
     public TokenResponse getAdminAccessToken() {
-        return null;
+        return new TokenResponse();
     }
 
-    public KeycloakRole getRoleByName(String token, String role) {
+    public KeycloakRole getRoleByName(String clientId, String token, String role) {
         return null;
     }
 
     public KeycloakUserDTO fetchFirstUserByUsername(String username, String token) {
+        return null;
+    }
+
+    public void assignRoleToUser(String userId, String clientId, List<KeycloakRole> roles, String token) {
 
     }
 }
