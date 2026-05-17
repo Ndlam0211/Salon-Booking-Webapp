@@ -3,6 +3,7 @@ package com.lamnd.service;
 import com.lamnd.config.KeycloakConfig;
 import com.lamnd.dto.identity.*;
 import com.lamnd.dto.request.RegistrationRequest;
+import com.lamnd.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -93,6 +94,8 @@ public class KeycloakService {
                 TokenResponse.class
         );
 
+        log.info("Get access token response from Keycloak: {}", response);
+
         // if get access token successfully then return the token response, otherwise throw an exception
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
             return response.getBody();
@@ -114,11 +117,60 @@ public class KeycloakService {
     }
 
     public KeycloakRole getRoleByName(String clientId, String token, String role) {
-        return null;
+        // create http request for get role by name
+        String url = String.format("%s/admin/realms/master/clients/%s/roles/%s", keycloakConfig.getKeycloakBaseURL(), clientId, role);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+        // call keycloak api to get role by name
+        ResponseEntity<KeycloakRole> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                requestEntity,
+                KeycloakRole.class
+        );
+
+        log.info("Get role by name response from Keycloak: {}", response);
+
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            return response.getBody();
+        } else {
+            throw new RuntimeException("Failed to get role from Keycloak: " + response.getBody());
+        }
     }
 
     public KeycloakUserDTO fetchFirstUserByUsername(String username, String token) {
-        return null;
+        String url = String.format("%s/admin/realms/master/users?username=%s", keycloakConfig.getKeycloakBaseURL(), username);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+
+        HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+
+        ResponseEntity<KeycloakUserDTO[]> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                requestEntity,
+                KeycloakUserDTO[].class
+        );
+
+
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            KeycloakUserDTO[] users =  response.getBody();
+            if (users != null && users.length > 0) {
+                return users[0];
+            } else {
+                throw new ResourceNotFoundException("User", "username", username);
+            }
+
+        } else {
+            throw new RuntimeException("Failed to fetch user from Keycloak: " + response.getBody());
+        }
     }
 
     public void assignRoleToUser(String userId, String clientId, List<KeycloakRole> roles, String token) {
