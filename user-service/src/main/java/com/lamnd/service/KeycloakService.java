@@ -86,7 +86,8 @@ public class KeycloakService {
                                              String grantType,
                                              String refreshToken) {
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
         HttpEntity<MultiValueMap<String, String>> requestEntity = getMultiValueMapHttpEntity(headers,
                 username, password, grantType, refreshToken);
@@ -115,8 +116,8 @@ public class KeycloakService {
                                                                                  String grantType,
                                                                                  String refreshToken) {
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-        requestBody.add("client_id", keycloakConfig.getKeycloakClienId());
-        requestBody.add("client_secret", keycloakConfig.getKeycloakClienSecret());
+        requestBody.add("client_id", keycloakConfig.getKeycloakClientId());
+        requestBody.add("client_secret", keycloakConfig.getKeycloakClientSecret());
         requestBody.add("scope", keycloakConfig.getScope());
         requestBody.add("grant_type", grantType);
         requestBody.add("username", username);

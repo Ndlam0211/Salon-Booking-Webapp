@@ -16,7 +16,7 @@ spring:
               uri:
                 "lb://USER-SERVICE"
               predicates:
-                - Path= /auth/**, /api/v1/users/**, /api/admin/users/**, /users/**
+                - Path= /api/v1/auth/**, /api/v1/users/**, /api/admin/users/**, /users/**
 
             - id: BOOKING-SERVICE
               uri:

@@ -12,13 +12,16 @@ public class KeycloakConfig {
     private String keycloakBaseURL;
 
     @Value("${idp.client-id}")
-    private String keycloakClienId;
+    private String keycloakClientId;
 
     @Value("${idp.client-secret}")
-    private String keycloakClienSecret;
+    private String keycloakClientSecret;
 
-    private final String keycloakAdminAPI = keycloakBaseURL + "/admin/realms/master/users";
-    private final String keycloakTokenAPI = keycloakBaseURL + "/realms/master/protocol/openid-connect/token";
+    @Value("${idp.url}/admin/realms/master/users")
+    private String keycloakAdminAPI;
+
+    @Value("${idp.url}/realms/master/protocol/openid-connect/token")
+    private String keycloakTokenAPI;
 
     private final String grantType = "password";
     private final String scope = "openid profile email";
