@@ -116,13 +116,28 @@ public class KeycloakService {
                                                                                  String grantType,
                                                                                  String refreshToken) {
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-        requestBody.add("client_id", keycloakConfig.getKeycloakClientId());
-        requestBody.add("client_secret", keycloakConfig.getKeycloakClientSecret());
-        requestBody.add("scope", keycloakConfig.getScope());
-        requestBody.add("grant_type", grantType);
-        requestBody.add("username", username);
-        requestBody.add("password", password);
-        requestBody.add("refresh_token", refreshToken);
+
+        if (keycloakConfig.getKeycloakClientId() != null) {
+            requestBody.add("client_id", keycloakConfig.getKeycloakClientId());
+        }
+        if (keycloakConfig.getKeycloakClientSecret() != null) {
+            requestBody.add("client_secret", keycloakConfig.getKeycloakClientSecret());
+        }
+        if (keycloakConfig.getScope() != null) {
+            requestBody.add("scope", keycloakConfig.getScope());
+        }
+        if (grantType != null) {
+            requestBody.add("grant_type", grantType);
+        }
+        if (username != null) {
+            requestBody.add("username", username);
+        }
+        if (password != null) {
+            requestBody.add("password", password);
+        }
+        if (refreshToken != null) {
+            requestBody.add("refresh_token", refreshToken);
+        }
 
         return new HttpEntity<>(requestBody, headers);
     }
