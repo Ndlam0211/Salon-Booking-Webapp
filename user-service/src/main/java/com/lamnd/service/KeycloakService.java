@@ -121,6 +121,7 @@ public class KeycloakService {
         requestBody.add("grant_type", grantType);
         requestBody.add("username", username);
         requestBody.add("password", password);
+        requestBody.add("refresh_token", refreshToken);
 
         return new HttpEntity<>(requestBody, headers);
     }
