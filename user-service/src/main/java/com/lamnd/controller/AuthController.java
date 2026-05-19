@@ -6,6 +6,7 @@ import com.lamnd.dto.request.LoginRequest;
 import com.lamnd.dto.request.RegistrationRequest;
 import com.lamnd.dto.response.AuthResponse;
 import com.lamnd.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class AuthController extends BaseController {
 
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<?> signup(@RequestBody RegistrationRequest registrationRequest) {
+    public ApiResponse<?> signup(@Valid @RequestBody RegistrationRequest registrationRequest) {
         AuthResponse response = authService.signup(registrationRequest);
         return createSuccessResponse(response);
     }
