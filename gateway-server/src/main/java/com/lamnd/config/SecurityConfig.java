@@ -22,8 +22,8 @@ public class SecurityConfig {
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers(AppConstant.AUTH_API).permitAll()
                 .pathMatchers(AppConstant.NOTIFICATION_WS_API).permitAll()
-                .pathMatchers(AppConstant.PUBLIC_APIs).hasAnyRole(AppConstant.ROLEs)
                 .pathMatchers(AppConstant.SALON_OWNER_APIs).hasRole("SALON_OWNER")
+                .pathMatchers(AppConstant.PUBLIC_APIs).hasAnyRole(AppConstant.ROLEs)
             )
             .oauth2ResourceServer(oAuth2ResourceServerSpec -> oAuth2ResourceServerSpec
                     .jwt(jwtSpec -> jwtSpec.jwtAuthenticationConverter(grantAuthoritiesConverter())));
