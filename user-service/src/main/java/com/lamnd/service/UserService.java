@@ -13,4 +13,5 @@ public interface UserService {
     UserResponse getMyInfo();
     UserResponse updateUser(UserUpdateRequest request,  Long id);
     void deleteUser(Long id);
+    UserResponse getUserFromToken(String token);
 }

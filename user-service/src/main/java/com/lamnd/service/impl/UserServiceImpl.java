@@ -1,5 +1,6 @@
 package com.lamnd.service.impl;
 
+import com.lamnd.dto.identity.KeycloakUserDTO;
 import com.lamnd.dto.request.UserCreateRequest;
 import com.lamnd.dto.request.UserUpdateRequest;
 import com.lamnd.dto.response.UserResponse;
@@ -8,6 +9,7 @@ import com.lamnd.exception.ResourceExistedException;
 import com.lamnd.exception.ResourceNotFoundException;
 import com.lamnd.mapper.UserMapper;
 import com.lamnd.repository.UserRepo;
+import com.lamnd.service.KeycloakService;
 import com.lamnd.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,6 +22,7 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final UserRepo userRepo;
+    private final KeycloakService keycloakService;
 
     @Override
     public void createUser(UserCreateRequest request) {
@@ -88,9 +91,23 @@ public class UserServiceImpl implements UserService {
         userRepo.deleteById(id);
     }
 
+    @Override
+    public UserResponse getUserFromToken(String token) {
+        KeycloakUserDTO keycloakUserDTO = keycloakService.fetchUserProfileByToken(token);
+
+        User existingUser = findUserByEmail(keycloakUserDTO.getEmail());
+
+        return userMapper.toDTO(existingUser);
+    }
+
     private User findUserById(Long id) {
         return userRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+    }
+
+    private User findUserByEmail(String email) {
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
     }
 
     private User saveUser(User user) {
