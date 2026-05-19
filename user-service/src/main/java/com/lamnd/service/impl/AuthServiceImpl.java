@@ -41,7 +41,6 @@ public class AuthServiceImpl implements AuthService {
         // create user in my own system
         User user = User.builder()
                 .username(registrationRequest.username())
-                .password(registrationRequest.password())
                 .fullName(registrationRequest.firstName() + " " + registrationRequest.lastName())
                 .role(registrationRequest.role())
                 .email(registrationRequest.email())
