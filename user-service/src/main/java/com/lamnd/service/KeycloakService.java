@@ -24,8 +24,8 @@ public class KeycloakService {
     private final KeycloakConfig keycloakConfig;
 
     public void register(RegistrationRequest request){
-        String ACCESS_TOKEN = getAccessToken(request.username(),
-                request.password(), "password", null).getAccessToken();
+        String ACCESS_TOKEN = getAccessToken(keycloakConfig.getKeycloakAdminUsername(),
+                keycloakConfig.getKeycloakAdminPassword(), keycloakConfig.getGrantType(), null).getAccessToken();
 
         // map keycloak user create from request
         KeycloakUserCreationRequest keycloakUser = KeycloakUserCreationRequest.builder()

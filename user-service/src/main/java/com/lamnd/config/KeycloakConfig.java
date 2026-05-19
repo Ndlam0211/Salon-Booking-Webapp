@@ -25,7 +25,7 @@ public class KeycloakConfig {
 
     private final String grantType = "password";
     private final String scope = "openid profile email";
-    private final String username = "lamnd";
-    private final String password = "admin";
-    private final String clientId = "9f7d7b6e-c8d5-40b6-8634-91c9e7650d06";
+    private final String keycloakAdminUsername = "lamnd";
+    private final String keycloakAdminPassword = "admin";
+    private final String clientId = "75f89a62-25ce-422b-bb14-b762ba21ebf6";
 }
