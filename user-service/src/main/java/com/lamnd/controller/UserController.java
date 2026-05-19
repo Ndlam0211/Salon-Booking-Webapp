@@ -5,7 +5,6 @@ import com.lamnd.common.BaseController;
 import com.lamnd.dto.request.UserCreateRequest;
 import com.lamnd.dto.request.UserUpdateRequest;
 import com.lamnd.dto.response.UserResponse;
-import com.lamnd.entity.User;
 import com.lamnd.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +34,8 @@ public class UserController extends BaseController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<ApiResponse<?>> getMyInfo() {
-        UserResponse user = userService.getMyInfo();
+    public ResponseEntity<ApiResponse<?>> getMyInfo(@RequestHeader("Authorization") String token) {
+        UserResponse user = userService.getUserProfile(token);
 
         return ResponseEntity.ok(createSuccessResponse(user));
     }

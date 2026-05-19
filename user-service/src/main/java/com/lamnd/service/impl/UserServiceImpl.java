@@ -45,15 +45,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse getMyInfo() {
-//        var context = SecurityContextHolder.getContext();
-//
-//        String username = context.getAuthentication().getName();
-//
-//        User user = findUserByUsername(username);
-//
-//        return userMapper.toDTO(user);
-        return null;
+    public UserResponse getUserProfile(String token) {
+        KeycloakUserDTO keycloakUserDTO = keycloakService.fetchUserProfileByToken(token);
+
+        User existingUser = findUserByEmail(keycloakUserDTO.getEmail());
+
+        return userMapper.toDTO(existingUser);
     }
 
     @Override
@@ -89,15 +86,6 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Long id) {
         findUserById(id);
         userRepo.deleteById(id);
-    }
-
-    @Override
-    public UserResponse getUserFromToken(String token) {
-        KeycloakUserDTO keycloakUserDTO = keycloakService.fetchUserProfileByToken(token);
-
-        User existingUser = findUserByEmail(keycloakUserDTO.getEmail());
-
-        return userMapper.toDTO(existingUser);
     }
 
     private User findUserById(Long id) {

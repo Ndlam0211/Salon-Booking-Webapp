@@ -10,8 +10,7 @@ public interface UserService {
     void createUser(UserCreateRequest request);
     List<UserResponse> getUsers();
     UserResponse getUserById(Long id);
-    UserResponse getMyInfo();
+    UserResponse getUserProfile(String token);
     UserResponse updateUser(UserUpdateRequest request,  Long id);
     void deleteUser(Long id);
-    UserResponse getUserFromToken(String token);
 }
