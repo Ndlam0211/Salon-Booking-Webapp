@@ -8,6 +8,7 @@ public record ServiceOfferingCreateRequest(
     String description,
     Double price,
     int duration,
-    String image
+    String image,
+    Long categoryId
 ) {
 }

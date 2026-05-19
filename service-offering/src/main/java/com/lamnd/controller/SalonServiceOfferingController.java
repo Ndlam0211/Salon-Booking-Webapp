@@ -8,11 +8,15 @@ import com.lamnd.dto.request.ServiceOfferingCreateRequest;
 import com.lamnd.dto.request.ServiceOfferingUpdateRequest;
 import com.lamnd.dto.response.ServiceOfferingResponse;
 import com.lamnd.service.ServiceOfferingService;
+import com.lamnd.service.client.CategoryFeignClient;
+import com.lamnd.service.client.SalonFeignClient;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Objects;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,18 +24,17 @@ import org.springframework.web.bind.annotation.*;
 public class SalonServiceOfferingController extends BaseController {
 
     private final ServiceOfferingService serviceOfferingService;
+    private final CategoryFeignClient categoryFeignClient;
+    private final SalonFeignClient salonFeignClient;
 
     @PostMapping
     public ResponseEntity<ApiResponse<?>> createServiceOffering(
-            @RequestBody @Valid ServiceOfferingCreateRequest createRequest
+            @RequestBody @Valid ServiceOfferingCreateRequest createRequest,
+            @RequestHeader("Authorization") String token
     ) {
-        SalonDTO salon = SalonDTO.builder()
-                .id(1L) // TODO: Get salon ID from authenticated user
-                .build();
+        SalonDTO salon = (SalonDTO) Objects.requireNonNull(salonFeignClient.getSalonByOwnerId(token).getBody()).data();
 
-        CategoryDTO category = CategoryDTO.builder()
-                .id(1L) // TODO: Get category ID from category service by openfeign client
-                .build();
+        CategoryDTO category = (CategoryDTO) Objects.requireNonNull(categoryFeignClient.getCategoryById(createRequest.categoryId()).getBody()).data();
 
         ServiceOfferingResponse serviceOffering = serviceOfferingService.createServiceOffering(createRequest, salon, category);
 
