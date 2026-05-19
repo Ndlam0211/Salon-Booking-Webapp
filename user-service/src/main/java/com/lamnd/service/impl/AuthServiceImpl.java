@@ -66,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse refreshToken(String refreshToken) {
         // get access token from keycloak
         TokenResponse tokenResponse = keycloakService.getAccessToken(null,
-                null, "refreshToken", refreshToken);
+                null, "refresh_token", refreshToken);
 
         // map token response to auth response
         return AuthResponse.builder()

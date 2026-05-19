@@ -225,4 +225,30 @@ public class KeycloakService {
             throw new RuntimeException("Failed to assign role to user in Keycloak: " + e.getMessage());
         }
     }
+
+    public KeycloakUserDTO fetchUserProfileByToken(String token) {
+        String url = String.format("%s/realms/master/protocol/openid-connect/userinfo", keycloakConfig.getKeycloakBaseURL());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", token);
+
+        HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+
+        try {
+            // call keycloak api to assign role to user
+            ResponseEntity<KeycloakUserDTO> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    requestEntity,
+                    KeycloakUserDTO.class
+            );
+
+            log.info("Fetch user profile by token response from Keycloak: {}", response);
+            return response.getBody();
+        } catch (Exception e) {
+            log.error("Error while fetching user profile by token in Keycloak: {}", e.getMessage());
+            throw new RuntimeException("Failed to fetch user profile by token in Keycloak: " + e.getMessage());
+        }
+    }
 }
