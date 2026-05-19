@@ -7,6 +7,7 @@ import com.lamnd.dto.request.SalonCreateRequest;
 import com.lamnd.dto.request.SalonUpdateRequest;
 import com.lamnd.dto.response.SalonResponse;
 import com.lamnd.service.SalonService;
+import com.lamnd.service.client.UserFeignClient;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,12 +23,14 @@ import java.util.List;
 public class SalonController extends BaseController {
 
     private final SalonService salonService;
+    private final UserFeignClient userFeignClient;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<?>> createSalon(@RequestBody @Valid SalonCreateRequest request) {
-        UserDTO userDTO = UserDTO.builder()
-                .id(1L)
-                .build();
+    public ResponseEntity<ApiResponse<?>> createSalon(
+            @RequestBody @Valid SalonCreateRequest request,
+            @RequestHeader("Authorization") String token) {
+
+        UserDTO userDTO = (UserDTO) Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data();
 
         SalonResponse response = salonService.createSalon(request, userDTO);
 
@@ -47,10 +51,8 @@ public class SalonController extends BaseController {
     }
 
     @GetMapping("/owner")
-    public ResponseEntity<ApiResponse<?>> getSalonByOwnerId() {
-        UserDTO userDTO = UserDTO.builder()
-                .id(1L)
-                .build();
+    public ResponseEntity<ApiResponse<?>> getSalonByOwnerId(@RequestHeader("Authorization") String token) {
+        UserDTO userDTO = (UserDTO) Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data();
 
         SalonResponse salon = salonService.getSalonByOwnerId(userDTO.id());
         return ResponseEntity.ok(createSuccessResponse(salon));
@@ -63,10 +65,11 @@ public class SalonController extends BaseController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> updateSalon(@PathVariable("id") Long id, @RequestBody @Valid SalonUpdateRequest request) {
-        UserDTO userDTO = UserDTO.builder()
-                .id(1L)
-                .build();
+    public ResponseEntity<ApiResponse<?>> updateSalon(
+            @PathVariable("id") Long id,
+            @RequestBody @Valid SalonUpdateRequest request,
+            @RequestHeader("Authorization") String token) {
+        UserDTO userDTO = (UserDTO) Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data();
 
         SalonResponse response = salonService.updateSalon(id, request, userDTO);
 
@@ -74,10 +77,10 @@ public class SalonController extends BaseController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteSalon(@PathVariable("id") Long id) {
-        UserDTO userDTO = UserDTO.builder()
-                .id(1L)
-                .build();
+    public ResponseEntity<?> deleteSalon(
+            @PathVariable("id") Long id,
+            @RequestHeader("Authorization") String token) {
+        UserDTO userDTO = (UserDTO) Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data();
 
         salonService.deleteSalon(id, userDTO);
 
