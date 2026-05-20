@@ -29,6 +29,13 @@ public class SalonCategoryController extends BaseController {
         return new ResponseEntity<>(createSuccessResponse(savedCategory), HttpStatus.CREATED);
     }
 
+    @GetMapping("/salon/{salonId}/category/{categoryId}")
+    public ResponseEntity<ApiResponse<?>> getCategoryByIdAndSalon(
+            @PathVariable("salonId") Long salonId,
+            @PathVariable("categoryId") Long categoryId) {
+        return ResponseEntity.ok(createSuccessResponse(categoryservice.findByIdAndSalonId(categoryId, salonId)));
+    }
+
     @DeleteMapping("/{categoryId}")
     public ResponseEntity<ApiResponse<?>> deleteCategory(@PathVariable("categoryId") Long categoryId) {
         SalonDTO salonDTO = SalonDTO.builder()

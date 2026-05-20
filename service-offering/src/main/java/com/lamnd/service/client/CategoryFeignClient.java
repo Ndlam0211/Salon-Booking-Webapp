@@ -11,4 +11,9 @@ public interface CategoryFeignClient {
 
     @GetMapping("/api/v1/categories/{categoryId}")
     ResponseEntity<ApiResponse<?>> getCategoryById(@PathVariable("categoryId") Long categoryId);
+
+    @GetMapping("/api/v1/categories/salon-owner/salon/{salonId}/category/{categoryId}")
+    ResponseEntity<ApiResponse<?>> getCategoryByIdAndSalon(
+            @PathVariable("categoryId") Long categoryId,
+            @PathVariable("salonId") Long salonId);
 }

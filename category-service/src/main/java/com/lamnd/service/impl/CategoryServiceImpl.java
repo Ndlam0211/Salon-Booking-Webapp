@@ -58,6 +58,13 @@ public class CategoryServiceImpl implements Categoryservice {
         categoryRepo.deleteById(categoryId);
     }
 
+    @Override
+    public CategoryResponse findByIdAndSalonId(Long categoryId, Long salonId) {
+        Category existingCategory = categoryRepo.findByIdAndSalonId(categoryId, salonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id and salon id", categoryId + " and " + salonId));
+        return categoryMapper.toDTO(existingCategory);
+    }
+
     private Category findCategoryById(Long categoryId) {
         return categoryRepo.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));

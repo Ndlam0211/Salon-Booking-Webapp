@@ -34,7 +34,7 @@ public class SalonServiceOfferingController extends BaseController {
     ) {
         SalonDTO salon = (SalonDTO) Objects.requireNonNull(salonFeignClient.getSalonByOwnerId(token).getBody()).data();
 
-        CategoryDTO category = (CategoryDTO) Objects.requireNonNull(categoryFeignClient.getCategoryById(createRequest.categoryId()).getBody()).data();
+        CategoryDTO category = (CategoryDTO) Objects.requireNonNull(categoryFeignClient.getCategoryByIdAndSalon(createRequest.categoryId(), salon.id()).getBody()).data();
 
         ServiceOfferingResponse serviceOffering = serviceOfferingService.createServiceOffering(createRequest, salon, category);
 

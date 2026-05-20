@@ -11,4 +11,5 @@ public interface Categoryservice {
     Set<CategoryResponse> getAllCategoriesBySalon(Long salonId);
     CategoryResponse getCategoryById(Long categoryId);
     void deleteCategoryById(Long categoryId, Long salonId);
+    CategoryResponse findByIdAndSalonId(Long categoryId, Long salonId);
 }
