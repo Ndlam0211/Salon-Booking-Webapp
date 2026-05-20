@@ -38,21 +38,41 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<Notification> getAllNotificationByUserId(Long userId) {
-        return notificationRepo.findByUserId(userId);
+    public List<NotificationResponse> getAllNotificationByUserId(Long userId) {
+        List<NotificationResponse> notifications = notificationRepo.findByUserId(userId).stream()
+                .map(notification -> {
+                    BookingDTO bookingDTO = objectMapper.convertValue(
+                            bookingFeignClient.getBookingById(notification.getBookingId()).data(), BookingDTO.class);
+                    return NotificationMapper.toDTO(notification, bookingDTO);
+                })
+                .toList();
+
+        return notifications;
     }
 
     @Override
-    public List<Notification> getAllNotificationBySalonId(Long salonId) {
-        return notificationRepo.findBySalonId(salonId);
+    public List<NotificationResponse> getAllNotificationBySalonId(Long salonId) {
+        List<NotificationResponse> notifications = notificationRepo.findBySalonId(salonId).stream()
+                .map(notification -> {
+                    BookingDTO bookingDTO = objectMapper.convertValue(
+                            bookingFeignClient.getBookingById(notification.getBookingId()).data(), BookingDTO.class);
+                    return NotificationMapper.toDTO(notification, bookingDTO);
+                })
+                .toList();
+
+        return notifications;
     }
 
     @Override
-    public Notification markNotificationAdRead(Long notificationId) {
+    public NotificationResponse markNotificationAdRead(Long notificationId) {
         return notificationRepo.findById(notificationId)
                 .map(notification -> {
                     notification.setIsRead(true);
-                    return notificationRepo.save(notification);
+
+                    BookingDTO bookingDTO = objectMapper.convertValue(
+                            bookingFeignClient.getBookingById(notification.getBookingId()).data(), BookingDTO.class);
+
+                    return NotificationMapper.toDTO(notificationRepo.save(notification), bookingDTO);
                 })
                 .orElseThrow(() -> new RuntimeException("Notification not found with id: " + notificationId));
     }
