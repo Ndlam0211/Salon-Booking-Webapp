@@ -31,9 +31,11 @@ public class ServiceOfferingController extends BaseController {
         return ResponseEntity.ok(createSuccessResponse(serviceOffering));
     }
 
-    @GetMapping("/list/{ids}")
-    public ResponseEntity<ApiResponse<?>> getServiceOfferingsByIds(@PathVariable("ids") Set<Long> ids) {
-        Set<ServiceOfferingResponse> serviceOfferings = serviceOfferingService.getServiceOfferingsByIds(ids);
+    @GetMapping("/salon/{salonId}/list/{ids}")
+    public ResponseEntity<ApiResponse<?>> getServiceOfferingsByIds(
+            @PathVariable("ids") Set<Long> ids,
+            @PathVariable("salonId") Long salonId){
+        Set<ServiceOfferingResponse> serviceOfferings = serviceOfferingService.getServiceOfferingsByIds(ids, salonId);
 
         return ResponseEntity.ok(createSuccessResponse(serviceOfferings));
     }

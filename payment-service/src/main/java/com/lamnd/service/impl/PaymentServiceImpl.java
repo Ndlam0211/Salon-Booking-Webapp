@@ -37,8 +37,10 @@ public class PaymentServiceImpl implements PaymentService {
         Payment newOrder = Payment.builder()
                 .amount(amount)
                 .paymentMethod(paymentMethod)
-                .bookingId(booking.id())
+                .userId(user.id())
                 .salonId(booking.salonId())
+                .bookingId(booking.id())
+                .status(PaymentStatus.PENDING)
                 .build();
 
         Payment savedOrder = paymentRepo.save(newOrder);
@@ -75,14 +77,14 @@ public class PaymentServiceImpl implements PaymentService {
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl("http://localhost:3000/payment-success/"+orderId)
-                .setCancelUrl("http://localhost:3000/paymen/cancel")
+                .setCancelUrl("http://localhost:3000/payment/cancel")
                 .addLineItem(SessionCreateParams.LineItem.builder()
                         .setQuantity(1L)
                         .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
-                                .setCurrency("usd")
-                                .setUnitAmount((long) (amount*100))
+                                .setCurrency("vnd")
+                                .setUnitAmount(amount.longValue()) // Stripe expects amount in at least 50 cents
                                 .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                                        .setName("salon appointment booking")
+                                        .setName("Salon Appointment Booking")
                                         .build())
                                 .build()
                         ).build())

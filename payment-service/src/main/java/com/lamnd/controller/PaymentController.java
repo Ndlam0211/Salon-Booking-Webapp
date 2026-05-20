@@ -9,10 +9,14 @@ import com.lamnd.dto.response.PaymentResponse;
 import com.lamnd.entity.Payment;
 import com.lamnd.enums.PaymentMethod;
 import com.lamnd.service.PaymentService;
+import com.lamnd.service.client.UserFeignClient;
 import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import tools.jackson.databind.ObjectMapper;
+
+import java.util.Objects;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,19 +24,22 @@ import org.springframework.web.bind.annotation.*;
 public class PaymentController extends BaseController {
 
     private final PaymentService paymentService;
+    private final UserFeignClient userFeignClient;
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<?> createPaymentLink(
             @RequestBody BookingDTO bookingDTO,
-            @RequestParam PaymentMethod paymentMethod
+            @RequestParam PaymentMethod paymentMethod,
+            @RequestHeader("Authorization") String token
     ) throws StripeException {
 
-        UserDTO user = UserDTO.builder()
-                .id(1L)
-                .fullName("Nguyen Dinh Lam")
-                .email("nguyendinhlam@gmail.com")
-                .build();
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        UserDTO user = objectMapper.convertValue(
+                Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data(),
+                UserDTO.class
+        );
 
         PaymentLinkResponse response = paymentService.createOrder(user, bookingDTO, paymentMethod);
 

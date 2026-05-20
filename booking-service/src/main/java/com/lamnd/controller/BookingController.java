@@ -1,25 +1,27 @@
 package com.lamnd.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lamnd.common.ApiResponse;
 import com.lamnd.common.BaseController;
-import com.lamnd.dto.SalonDTO;
-import com.lamnd.dto.SalonReport;
-import com.lamnd.dto.ServiceDTO;
-import com.lamnd.dto.UserDTO;
+import com.lamnd.dto.*;
 import com.lamnd.dto.request.BookingCreateRequest;
 import com.lamnd.dto.response.BookingResponse;
 import com.lamnd.dto.response.BookingSlotResponse;
 import com.lamnd.enums.BookingStatus;
+import com.lamnd.enums.PaymentMethod;
 import com.lamnd.service.BookingService;
+import com.lamnd.service.client.PaymentFeignClient;
+import com.lamnd.service.client.SalonFeignClient;
+import com.lamnd.service.client.ServiceOfferingFeignClient;
+import com.lamnd.service.client.UserFeignClient;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @RestController
@@ -28,33 +30,36 @@ import java.util.Set;
 public class BookingController extends BaseController {
 
     private final BookingService bookingService;
+    private final UserFeignClient userFeignClient;
+    private final SalonFeignClient salonFeignClient;
+    private final PaymentFeignClient paymentFeignClient;
+    private final ServiceOfferingFeignClient serviceOfferingFeignClient;
+    private final ObjectMapper objectMapper;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<?> createBooking(
             @RequestParam Long salonId,
-            @RequestBody @Valid BookingCreateRequest createRequest
+            @RequestParam PaymentMethod paymentMethod,
+            @RequestBody @Valid BookingCreateRequest createRequest,
+            @RequestHeader("Authorization") String token
     ){
-        UserDTO user = UserDTO.builder()
-                .id(1L)
-                .build();
+        UserDTO user = objectMapper
+                .convertValue(Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data(), UserDTO.class);
 
-        SalonDTO salon = SalonDTO.builder()
-                .id(salonId)
-                .openingTime(LocalTime.now())
-                .closingTime(LocalTime.now().plusHours(12))
-                .build();
+        SalonDTO salon = objectMapper
+                .convertValue(Objects.requireNonNull(salonFeignClient.getSalonById(salonId).getBody()).data(), SalonDTO.class);
 
-        Set<ServiceDTO> services = new HashSet<>();
+        Set<ServiceDTO> services = objectMapper.convertValue(
+                Objects.requireNonNull(serviceOfferingFeignClient.getServiceOfferingsByIds(createRequest.serviceIds(), salon.id()).getBody()).data(),
+                objectMapper.getTypeFactory().constructCollectionType(Set.class, ServiceDTO.class)
+        );
 
-        ServiceDTO serviceDTO = ServiceDTO.builder()
-                .id(1L)
-                .price(10000.0)
-                .duration(15)
-                .name("Haircut for men")
-                .build();
-
-        services.add(serviceDTO);
+        if (services.isEmpty()) {
+            throw new IllegalArgumentException("Services not found");
+        }else if (services.size() != createRequest.serviceIds().size()) {
+            throw new IllegalArgumentException("Some services not found");
+        }
 
         BookingResponse savedBooking = bookingService.createBooking(
                 createRequest,
@@ -63,15 +68,20 @@ public class BookingController extends BaseController {
                 services
         );
 
-        return createSuccessResponse(savedBooking);
+        PaymentLinkResponse paymentLinkResponse = objectMapper.convertValue(
+                paymentFeignClient.createPaymentLink(savedBooking, paymentMethod, token).data(),
+                PaymentLinkResponse.class);
+
+        return createSuccessResponse(paymentLinkResponse);
     }
 
     @GetMapping("/customer")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<?> getBookingByCustomer(){
-        UserDTO user = UserDTO.builder()
-                .id(1L)
-                .build();
+    public ApiResponse<?> getBookingByCustomer(
+            @RequestHeader("Authorization") String token
+    ){
+        UserDTO user = objectMapper
+                .convertValue(Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data(), UserDTO.class);
 
         List<BookingResponse> bookings = bookingService.getBookingsByCustomerId(user.id());
 
@@ -80,8 +90,13 @@ public class BookingController extends BaseController {
 
     @GetMapping("/salon")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<?> getBookingBySalon(){
-        List<BookingResponse> bookings = bookingService.getBookingsBySalonId(1L);
+    public ApiResponse<?> getBookingBySalon(
+            @RequestHeader("Authorization") String token
+    ){
+        SalonDTO salon = objectMapper
+                .convertValue(Objects.requireNonNull(salonFeignClient.getSalonByOwnerId(token).getBody()).data(), SalonDTO.class);
+
+        List<BookingResponse> bookings = bookingService.getBookingsBySalonId(salon.id());
 
         return createSuccessResponse(bookings);
     }
@@ -107,8 +122,13 @@ public class BookingController extends BaseController {
 
     @GetMapping("/report")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<?> getSalonReport(){
-        SalonReport report = bookingService.getSalonReport(1L);
+    public ApiResponse<?> getSalonReport(
+            @RequestHeader("Authorization") String token
+    ){
+        SalonDTO salon = objectMapper
+                .convertValue(Objects.requireNonNull(salonFeignClient.getSalonByOwnerId(token).getBody()).data(), SalonDTO.class);
+
+        SalonReport report = bookingService.getSalonReport(salon.id());
 
         return createSuccessResponse(report);
     }

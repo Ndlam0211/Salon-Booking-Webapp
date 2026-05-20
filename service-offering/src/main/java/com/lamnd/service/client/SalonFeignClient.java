@@ -9,6 +9,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 @FeignClient("SALON-SERVICE")
 public interface SalonFeignClient {
 
-    @GetMapping("api/v1/salons/owner")
+    @GetMapping("/api/v1/salons/owner")
     ResponseEntity<ApiResponse<?>> getSalonByOwnerId(@RequestHeader("Authorization") String token);
 }

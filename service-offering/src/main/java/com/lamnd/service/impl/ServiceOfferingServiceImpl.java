@@ -56,11 +56,12 @@ public class ServiceOfferingServiceImpl implements ServiceOfferingService {
     }
 
     @Override
-    public Set<ServiceOfferingResponse> getServiceOfferingsByIds(Set<Long> ids) {
-        List<ServiceOffering> serviceOfferings = serviceOfferingRepo.findAllById(ids);
-        Set<ServiceOffering> serviceOfferingSet = new HashSet<>(serviceOfferings);
+    public Set<ServiceOfferingResponse> getServiceOfferingsByIds(Set<Long> ids, Long salonId) {
+        Set<ServiceOffering> serviceOfferings = serviceOfferingRepo.findBySalonId(salonId).stream()
+                .filter(serviceOffering -> ids.contains(serviceOffering.getId()))
+                .collect(Collectors.toSet());
 
-        return serviceOfferingMapper.toSet(serviceOfferingSet);
+        return serviceOfferingMapper.toSet(serviceOfferings);
     }
 
     @Override
