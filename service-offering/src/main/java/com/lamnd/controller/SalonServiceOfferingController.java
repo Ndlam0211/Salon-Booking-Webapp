@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Objects;
 
@@ -32,9 +33,10 @@ public class SalonServiceOfferingController extends BaseController {
             @RequestBody @Valid ServiceOfferingCreateRequest createRequest,
             @RequestHeader("Authorization") String token
     ) {
-        SalonDTO salon = (SalonDTO) Objects.requireNonNull(salonFeignClient.getSalonByOwnerId(token).getBody()).data();
+        ObjectMapper objectMapper = new ObjectMapper();
+        SalonDTO salon = objectMapper.convertValue(Objects.requireNonNull(salonFeignClient.getSalonByOwnerId(token).getBody()).data(), SalonDTO.class);
 
-        CategoryDTO category = (CategoryDTO) Objects.requireNonNull(categoryFeignClient.getCategoryByIdAndSalon(createRequest.categoryId(), salon.id()).getBody()).data();
+        CategoryDTO category = objectMapper.convertValue(Objects.requireNonNull(categoryFeignClient.getCategoryByIdAndSalon(createRequest.categoryId(), salon.id()).getBody()).data(), CategoryDTO.class);
 
         ServiceOfferingResponse serviceOffering = serviceOfferingService.createServiceOffering(createRequest, salon, category);
 

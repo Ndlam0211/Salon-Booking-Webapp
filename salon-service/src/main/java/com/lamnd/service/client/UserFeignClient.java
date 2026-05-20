@@ -7,12 +7,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(name = "USER-SERVICE")
+@FeignClient("USER-SERVICE")
 public interface UserFeignClient {
 
-    @GetMapping("/{userId}")
+    @GetMapping("/api/v1/users/{userId}")
     ResponseEntity<ApiResponse<?>> getUserById(@PathVariable("userId") Long userId);
 
-    @GetMapping("/profile")
+    @GetMapping("/api/v1/users/profile")
     ResponseEntity<ApiResponse<?>> getMyInfo(@RequestHeader("Authorization") String token);
 }

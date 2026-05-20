@@ -1,5 +1,6 @@
 package com.lamnd.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lamnd.common.ApiResponse;
 import com.lamnd.common.BaseController;
 import com.lamnd.dto.UserDTO;
@@ -24,13 +25,15 @@ public class SalonController extends BaseController {
 
     private final SalonService salonService;
     private final UserFeignClient userFeignClient;
+    private final ObjectMapper objectMapper;
 
     @PostMapping
     public ResponseEntity<ApiResponse<?>> createSalon(
             @RequestBody @Valid SalonCreateRequest request,
             @RequestHeader("Authorization") String token) {
 
-        UserDTO userDTO = (UserDTO) Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data();
+        UserDTO userDTO = objectMapper
+                .convertValue(Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data(), UserDTO.class);
 
         SalonResponse response = salonService.createSalon(request, userDTO);
 
@@ -52,7 +55,8 @@ public class SalonController extends BaseController {
 
     @GetMapping("/owner")
     public ResponseEntity<ApiResponse<?>> getSalonByOwnerId(@RequestHeader("Authorization") String token) {
-        UserDTO userDTO = (UserDTO) Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data();
+        UserDTO userDTO = objectMapper
+                .convertValue(Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data(), UserDTO.class);
 
         SalonResponse salon = salonService.getSalonByOwnerId(userDTO.id());
         return ResponseEntity.ok(createSuccessResponse(salon));
@@ -69,7 +73,8 @@ public class SalonController extends BaseController {
             @PathVariable("id") Long id,
             @RequestBody @Valid SalonUpdateRequest request,
             @RequestHeader("Authorization") String token) {
-        UserDTO userDTO = (UserDTO) Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data();
+        UserDTO userDTO = objectMapper
+                .convertValue(Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data(), UserDTO.class);
 
         SalonResponse response = salonService.updateSalon(id, request, userDTO);
 
@@ -80,7 +85,8 @@ public class SalonController extends BaseController {
     public ResponseEntity<?> deleteSalon(
             @PathVariable("id") Long id,
             @RequestHeader("Authorization") String token) {
-        UserDTO userDTO = (UserDTO) Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data();
+        UserDTO userDTO = objectMapper
+                .convertValue(Objects.requireNonNull(userFeignClient.getMyInfo(token).getBody()).data(), UserDTO.class);
 
         salonService.deleteSalon(id, userDTO);
 
