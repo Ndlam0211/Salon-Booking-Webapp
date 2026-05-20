@@ -1,7 +1,11 @@
 package com.lamnd.dto.response;
 
 import com.lamnd.dto.BookingDTO;
+import lombok.Builder;
 
+import java.time.LocalDateTime;
+
+@Builder
 public record NotificationResponse(
         Long id,
         String type,
@@ -10,6 +14,7 @@ public record NotificationResponse(
         Long userId,
         Long bookingId,
         Long salonId,
-        BookingDTO booking
+        BookingDTO booking,
+        LocalDateTime createdAt
 ) {
 }
