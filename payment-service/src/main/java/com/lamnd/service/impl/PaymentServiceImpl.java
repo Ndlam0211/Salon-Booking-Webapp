@@ -2,121 +2,138 @@ package com.lamnd.service.impl;
 
 import com.lamnd.dto.BookingDTO;
 import com.lamnd.dto.UserDTO;
+import com.lamnd.dto.request.CreatePaymentRequest;
+import com.lamnd.dto.request.PaymentRequest;
 import com.lamnd.dto.response.PaymentLinkResponse;
-import com.lamnd.dto.response.PaymentResponse;
 import com.lamnd.entity.Payment;
 import com.lamnd.enums.PaymentMethod;
 import com.lamnd.enums.PaymentStatus;
-import com.lamnd.mapper.PaymentMapper;
-import com.lamnd.messaging.BookingEventProducer;
-import com.lamnd.messaging.NotificationEventProducer;
+import com.lamnd.factory.PaymentProcessorFactory;
 import com.lamnd.repository.PaymentRepo;
+import com.lamnd.service.PaymentProcessor;
 import com.lamnd.service.PaymentService;
-import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
-import com.stripe.model.checkout.Session;
-import com.stripe.param.checkout.SessionCreateParams;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepo paymentRepo;
-    private final PaymentMapper paymentMapper;
-    private final BookingEventProducer bookingEventProducer;
-    private final NotificationEventProducer notificationEventProducer;
+    private final PaymentProcessorFactory paymentProcessorFactory;
 
-    @Value("${stripe.api.key}")
-    private String stripeSecretKey;
+    @Value("${payment.success-url}")
+    private String successUrl;
+
+    @Value("${payment.cancel-url}")
+    private String cancelUrl;
 
     @Override
+    @Transactional
     public PaymentLinkResponse createOrder(UserDTO user,
                                            BookingDTO booking,
                                            PaymentMethod paymentMethod) throws StripeException {
-        Double amount = booking.totalPrice();
-
-        Payment newOrder = Payment.builder()
-                .amount(amount)
-                .paymentMethod(paymentMethod)
-                .userId(user.id())
-                .salonId(booking.salonId())
-                .bookingId(booking.id())
-                .status(PaymentStatus.PENDING)
-                .build();
-
-        Payment savedOrder = paymentRepo.save(newOrder);
-
-        PaymentLinkResponse paymentLinkResponse = new PaymentLinkResponse();
-
-        if (paymentMethod.equals(PaymentMethod.STRIPE)) {
-            String paymentUrl = createStripePaymentLink(user, savedOrder.getAmount(), savedOrder.getId());
-
-            paymentLinkResponse.setPaymentLinkUrl(paymentUrl);
+        // Validate inputs
+        if (user == null || user.id() == null) {
+            log.warn("Invalid user data for payment creation");
+            throw new IllegalArgumentException("User information is required");
         }
 
-        return paymentLinkResponse;
+        if (booking == null || booking.id() == null) {
+            log.warn("Invalid booking data for payment creation");
+            throw new IllegalArgumentException("Booking information is required");
+        }
+
+        if (paymentMethod == null) {
+            log.warn("Payment method not specified");
+            throw new IllegalArgumentException("Payment method must be specified");
+        }
+
+        Double amount = booking.totalPrice();
+        if (amount == null || amount <= 0) {
+            log.warn("Invalid amount for booking {}: {}", booking.id(), amount);
+            throw new IllegalArgumentException("Invalid booking amount");
+        }
+
+        try {
+            // Create payment record
+            Payment newPayment = Payment.builder()
+                    .amount(amount)
+                    .paymentMethod(paymentMethod)
+                    .userId(user.id())
+                    .salonId(booking.salonId())
+                    .bookingId(booking.id())
+                    .status(PaymentStatus.PENDING)
+                    .build();
+
+            Payment savedPayment = paymentRepo.save(newPayment);
+            log.info("Payment created with ID: {} for booking: {}", savedPayment.getId(), booking.id());
+
+            // Get appropriate processor
+            PaymentProcessor processor = paymentProcessorFactory.getProcessor(paymentMethod);
+
+            // Create payment link
+            String paymentUrl = processor.createPaymentLink(
+                    CreatePaymentRequest.builder()
+                            .amount(amount)
+                            .orderId(savedPayment.getId())
+                            .returnUrl(successUrl)
+                            .cancelUrl(cancelUrl)
+                            .description("Payment for salon appointment booking")
+                            .build()
+            );
+
+            log.info("Payment link created successfully for payment ID: {}", savedPayment.getId());
+
+            return PaymentLinkResponse.builder()
+                    .paymentLinkUrl(paymentUrl)
+                    .build();
+
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error while creating payment: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error creating payment link for booking {}: {}", booking.id(), e.getMessage(), e);
+            throw new RuntimeException("Failed to create payment link: " + e.getMessage(), e);
+        }
     }
 
     @Override
-    public PaymentResponse getPaymentById(Long id) {
-        Payment payment =  paymentRepo.findById(id)
+    public Payment getPaymentById(Long id) {
+        return paymentRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment order not found"));
-
-        return paymentMapper.toResponse(payment);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Payment getPaymentByPaymentId(String paymentId) {
-        return paymentRepo.findByPaymentLinkId(paymentId);
+        if (paymentId == null || paymentId.isBlank()) {
+            log.warn("Invalid payment link ID");
+            throw new IllegalArgumentException("Valid payment link ID is required");
+        }
+
+        Payment payment = paymentRepo.findByPaymentLinkId(paymentId);
+        if (payment == null) {
+            log.warn("Payment not found with link ID: {}", paymentId);
+            throw new RuntimeException("Payment not found with link ID: " + paymentId);
+        }
+        return payment;
     }
 
     @Override
-    public String createStripePaymentLink(UserDTO user, Double amount, Long orderId) throws StripeException {
-        Stripe.apiKey = stripeSecretKey;
-
-        SessionCreateParams params = SessionCreateParams.builder()
-                .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
-                .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("http://localhost:3000/payment-success/"+orderId)
-                .setCancelUrl("http://localhost:3000/payment/cancel")
-                .addLineItem(SessionCreateParams.LineItem.builder()
-                        .setQuantity(1L)
-                        .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
-                                .setCurrency("vnd")
-                                .setUnitAmount(amount.longValue()) // Stripe expects amount in at least 50 cents
-                                .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                                        .setName("Salon Appointment Booking")
-                                        .build())
-                                .build()
-                        ).build())
-                .build();
-
-        Session session = Session.create(params);
-
-        return session.getUrl();
-    }
-
-    @Override
-    public Boolean proceedPayment(Payment payment, String paymentId, String paymentLinkId) {
-        if (payment.getStatus().equals(PaymentStatus.PENDING)) {
-            if (payment.getPaymentMethod().equals(PaymentMethod.STRIPE)) {
-                payment.setStatus(PaymentStatus.SUCCESS);
-                paymentRepo.save(payment);
-
-                bookingEventProducer.sendBookingEvent(payment);
-                notificationEventProducer.sendNotificationEvent(
-                            payment.getBookingId(),
-                            payment.getUserId(),
-                            payment.getSalonId()
+    @Transactional
+    public Boolean proceedPayment(Payment payment, PaymentRequest paymentRequest) {
+        PaymentProcessor processor =
+                paymentProcessorFactory.getProcessor(
+                        payment.getPaymentMethod()
                 );
 
-                return true;
-            }
-        }
-
-        return false;
+        return processor.process(payment, paymentRequest);
     }
 }
+

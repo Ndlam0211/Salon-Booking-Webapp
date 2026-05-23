@@ -31,7 +31,20 @@ eureka:
     service-url:
       defaultZone: "http://localhost:8070/eureka/"
 
-stripe:
-  api:
-    key: "sk_test_51TZ6Pu8Le6H9TdlWM4DoW7NYgmwgn502EbhuYAJ0eDeTylqav8qO5i4skmJMM8WIWyYJ8frHpUtRiEFI5HdQpphq00acnf5jPL"
-
+payment:
+  success-url: "http://localhost:3000/payment-success/"
+  cancel-url: "http://localhost:3000/payment/cancel"
+  stripe:
+    api:
+      key: "sk_test_51TZ6Pu8Le6H9TdlWM4DoW7NYgmwgn502EbhuYAJ0eDeTylqav8qO5i4skmJMM8WIWyYJ8frHpUtRiEFI5HdQpphq00acnf5jPL"
+  vnpay:
+    tmn-code: "2QXH9KQZ"
+    hash-secret: "ZQKZLQGJXQKZLQGJXQKZLQGJXQKZLQGJXQKZLQGJXQKZLQGJXQKZLQGJXQKZLQGJXQKZLQGJXQKZLQGJXQKZLQGJXQKZLQ"
+    pay-url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+  momo:
+    partner-code: "MOMOBKUN20180529"
+    access-key: "klm05TvNBzhg7hH8jI2iKuy9B3t0vH6qEw3YcA4"
+    secret-key: "at67qH6mk8w5Y1nAyMoYK8mVbK8LkFjA4h4B2r9g6rB4qH7eQ5A1n2o4eH1"
+    request-type: "captureMoMoWallet"
+    endpoint: "https://test-payment.momo.vn/v2/gateway/api/create"
+    ipn-url: "http://localhost:8086/api/v1/payments/momo/ipn"

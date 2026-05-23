@@ -4,14 +4,15 @@ import com.lamnd.common.ApiResponse;
 import com.lamnd.common.BaseController;
 import com.lamnd.dto.BookingDTO;
 import com.lamnd.dto.UserDTO;
+import com.lamnd.dto.request.PaymentRequest;
 import com.lamnd.dto.response.PaymentLinkResponse;
-import com.lamnd.dto.response.PaymentResponse;
 import com.lamnd.entity.Payment;
 import com.lamnd.enums.PaymentMethod;
 import com.lamnd.service.PaymentService;
 import com.lamnd.service.client.UserFeignClient;
 import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import tools.jackson.databind.ObjectMapper;
@@ -21,6 +22,7 @@ import java.util.Objects;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/payments")
+@Slf4j
 public class PaymentController extends BaseController {
 
     private final PaymentService paymentService;
@@ -51,20 +53,20 @@ public class PaymentController extends BaseController {
     public ApiResponse<?> getPaymentById(
             @PathVariable Long paymentId
     )  {
-        PaymentResponse response = paymentService.getPaymentById(paymentId);
+        Payment response = paymentService.getPaymentById(paymentId);
 
         return createSuccessResponse(response);
     }
 
-    @PatchMapping("/proceed")
+    @PatchMapping("/{paymentId}/proceed")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<?> proceedPayment(
-            @RequestParam String paymentId,
-            @RequestParam String paymentLinkId
+            @PathVariable("paymentId") Long paymentId,
+            @RequestBody PaymentRequest paymentRequest
     )  {
-        Payment payment = paymentService.getPaymentByPaymentId(paymentLinkId);
+        Payment payment = paymentService.getPaymentById(paymentId);
 
-        Boolean response = paymentService.proceedPayment(payment, paymentId, paymentLinkId);
+        Boolean response = paymentService.proceedPayment(payment, paymentRequest);
 
         return createSuccessResponse(response);
     }
