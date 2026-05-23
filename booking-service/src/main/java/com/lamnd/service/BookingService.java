@@ -7,6 +7,8 @@ import com.lamnd.dto.UserDTO;
 import com.lamnd.dto.request.BookingCreateRequest;
 import com.lamnd.dto.response.BookingResponse;
 import com.lamnd.dto.response.BookingSlotResponse;
+import com.lamnd.entity.Booking;
+import com.lamnd.entity.Payment;
 import com.lamnd.enums.BookingStatus;
 
 import java.time.LocalDate;
@@ -25,4 +27,5 @@ public interface BookingService {
     BookingResponse updateBookingStatus(Long bookingId, BookingStatus status);
     List<BookingSlotResponse> getBookingByDate(LocalDate date, Long salonId);
     SalonReport getSalonReport(Long salonId);
+    void updateBookingStatus(Payment payment);
 }

@@ -8,6 +8,7 @@ import com.lamnd.dto.request.BookingCreateRequest;
 import com.lamnd.dto.response.BookingResponse;
 import com.lamnd.dto.response.BookingSlotResponse;
 import com.lamnd.entity.Booking;
+import com.lamnd.entity.Payment;
 import com.lamnd.enums.BookingStatus;
 import com.lamnd.mapper.BookingMapper;
 import com.lamnd.repository.BookingRepo;
@@ -145,6 +146,15 @@ public class BookingServiceImpl implements BookingService {
                 .cancelledBookings(cancelledBookings.size())
                 .totalRefund(totalRefund)
                 .build();
+    }
+
+    @Override
+    public void updateBookingStatus(Payment payment) {
+        Booking existingBooking = findBookingById(payment.getBookingId());
+
+        existingBooking.setStatus(BookingStatus.CONFIRMED);
+
+        bookingRepository.save(existingBooking);
     }
 
     private boolean isSameDate(LocalDateTime localDateTime, LocalDate date) {
