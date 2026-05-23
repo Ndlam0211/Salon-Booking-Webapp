@@ -49,7 +49,7 @@ public class StripePaymentProcessor implements PaymentProcessor {
                         .setMode(SessionCreateParams.Mode.PAYMENT)
                         .setSuccessUrl(
                                 request.getReturnUrl()
-                                        + "/" + request.getOrderId()
+                                        + request.getOrderId()
                                         + "?session_id={CHECKOUT_SESSION_ID}"
                         )
                         .setCancelUrl(request.getCancelUrl())

@@ -17,6 +17,7 @@ public class NotificationEventProducer {
                 .bookingId(bookingId)
                 .userId(userId)
                 .salonId(salonId)
+                .isRead(false)
                 .type("BOOKING")
                 .description("Your booking has been successfully paid.")
                 .build();
