@@ -8,6 +8,8 @@ import com.lamnd.entity.Payment;
 import com.lamnd.enums.PaymentMethod;
 import com.lamnd.enums.PaymentStatus;
 import com.lamnd.mapper.PaymentMapper;
+import com.lamnd.messaging.BookingEventProducer;
+import com.lamnd.messaging.NotificationEventProducer;
 import com.lamnd.repository.PaymentRepo;
 import com.lamnd.service.PaymentService;
 import com.stripe.Stripe;
@@ -24,6 +26,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepo paymentRepo;
     private final PaymentMapper paymentMapper;
+    private final BookingEventProducer bookingEventProducer;
+    private final NotificationEventProducer notificationEventProducer;
 
     @Value("${stripe.api.key}")
     private String stripeSecretKey;
@@ -101,6 +105,14 @@ public class PaymentServiceImpl implements PaymentService {
             if (payment.getPaymentMethod().equals(PaymentMethod.STRIPE)) {
                 payment.setStatus(PaymentStatus.SUCCESS);
                 paymentRepo.save(payment);
+
+                bookingEventProducer.sendBookingEvent(payment);
+                notificationEventProducer.sendNotificationEvent(
+                            payment.getBookingId(),
+                            payment.getUserId(),
+                            payment.getSalonId()
+                );
+
                 return true;
             }
         }

@@ -16,6 +16,11 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  rabbitmq:
+    host: rabbit
+    port: 5672
+    username: guest
+    password: guest
 
 eureka:
   instance:
@@ -29,3 +34,4 @@ eureka:
 stripe:
   api:
     key: "sk_test_51TZ6Pu8Le6H9TdlWM4DoW7NYgmwgn502EbhuYAJ0eDeTylqav8qO5i4skmJMM8WIWyYJ8frHpUtRiEFI5HdQpphq00acnf5jPL"
+
