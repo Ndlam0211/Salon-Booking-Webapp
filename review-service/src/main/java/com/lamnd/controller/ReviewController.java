@@ -1,10 +1,12 @@
 package com.lamnd.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lamnd.dto.ReviewDTO;
 import com.lamnd.dto.SalonDTO;
 import com.lamnd.dto.UserDTO;
 import com.lamnd.dto.request.ReviewRequest;
 import com.lamnd.entity.Review;
+import com.lamnd.mapper.ReviewMapper;
 import com.lamnd.service.ReviewService;
 import com.lamnd.service.client.SalonFeignClient;
 import com.lamnd.service.client.UserFeignClient;
@@ -43,12 +45,25 @@ public class ReviewController {
     }
 
     @GetMapping("/salon/{salonId}")
-    public ResponseEntity<List<Review>> getReviewsBySalonId(
-            @PathVariable("salonId") Long salonId) {
+    public ResponseEntity<List<ReviewDTO>> getReviewsBySalonId(
+            @PathVariable("salonId") Long salonId,
+            @RequestHeader("Authorization") String token) {
 
         List<Review> reviews = reviewService.getReviewsBySalonId(salonId);
 
-        return ResponseEntity.ok(reviews);
+        List<ReviewDTO> reviewDTOs = reviews.stream().map((review) -> {
+            UserDTO user = null;
+            try {
+                user = objectMapper
+                        .convertValue(Objects.requireNonNull(userFeignClient.getUserById(review.getUserId()).getBody()).data(), UserDTO.class);
+            }
+            catch (Exception e) {
+               throw new RuntimeException("Failed to fetch user info for review with ID: " + review.getId(), e);
+            }
+            return ReviewMapper.toDTO(review, user);
+        }).toList();
+
+        return ResponseEntity.ok(reviewDTOs);
     }
 
     @PutMapping("/{reviewId}")
