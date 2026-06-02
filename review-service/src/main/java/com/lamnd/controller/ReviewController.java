@@ -43,7 +43,7 @@ public class ReviewController {
     }
 
     @GetMapping("/salon/{salonId}")
-    public ResponseEntity<List<Review>> createReview(
+    public ResponseEntity<List<Review>> getReviewsBySalonId(
             @PathVariable("salonId") Long salonId) {
 
         List<Review> reviews = reviewService.getReviewsBySalonId(salonId);

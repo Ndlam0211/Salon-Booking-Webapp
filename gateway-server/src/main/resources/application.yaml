@@ -35,6 +35,12 @@ spring:
               predicates:
                 - Path= /api/v1/categories/**
 
+            - id: REVIEW-SERVICE
+              uri:
+                "lb://REVIEW-SERVICE"
+              predicates:
+                - Path= /api/v1/reviews/**
+
             - id: PAYMENT-SERVICE
               uri:
                 "lb://PAYMENT-SERVICE"

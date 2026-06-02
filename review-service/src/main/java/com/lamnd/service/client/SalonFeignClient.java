@@ -10,6 +10,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 @FeignClient("SALON-SERVICE")
 public interface SalonFeignClient {
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> getSalonById(@PathVariable("id") Long id);
+    @GetMapping("/api/v1/salons/{id}")
+    ResponseEntity<ApiResponse<?>> getSalonById(@PathVariable("id") Long id);
 }
