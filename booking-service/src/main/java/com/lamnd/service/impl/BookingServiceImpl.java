@@ -1,5 +1,6 @@
 package com.lamnd.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lamnd.dto.SalonDTO;
 import com.lamnd.dto.SalonReport;
 import com.lamnd.dto.ServiceDTO;
@@ -13,12 +14,16 @@ import com.lamnd.enums.BookingStatus;
 import com.lamnd.mapper.BookingMapper;
 import com.lamnd.repository.BookingRepo;
 import com.lamnd.service.BookingService;
+import com.lamnd.service.client.SalonFeignClient;
+import com.lamnd.service.client.ServiceOfferingFeignClient;
+import com.lamnd.service.client.UserFeignClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,7 +32,10 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepo bookingRepository;
-    private final BookingMapper bookingMapper;
+    private final UserFeignClient userFeignClient;
+    private final SalonFeignClient salonFeignClient;
+    private final ServiceOfferingFeignClient serviceOfferingFeignClient;
+    private final ObjectMapper objectMapper;
 
     @Override
     public BookingResponse createBooking(BookingCreateRequest createRequest,
@@ -63,37 +71,57 @@ public class BookingServiceImpl implements BookingService {
         newBooking.setTotalPrice(totalPrice);
         newBooking.setStatus(BookingStatus.PENDING);
 
-        return bookingMapper.toDTO(bookingRepository.save(newBooking));
+        return BookingMapper.toDTO(bookingRepository.save(newBooking), services, salon, user);
     }
 
     @Override
     public List<BookingResponse> getBookingsByCustomerId(Long customerId) {
         List<Booking> bookings = bookingRepository.findByCustomerId(customerId);
 
-        return bookingMapper.toList(bookings);
+        return getListResponse(bookings);
     }
 
     @Override
     public List<BookingResponse> getBookingsBySalonId(Long salonId) {
         List<Booking> bookings = bookingRepository.findBySalonId(salonId);
 
-        return bookingMapper.toList(bookings);
+        return getListResponse(bookings);
     }
 
     @Override
     public BookingResponse getBookingById(Long bookingId) {
         Booking booking = findBookingById(bookingId);
 
-        return bookingMapper.toDTO(booking);
+        return getResponse(booking);
     }
 
     @Override
     public BookingResponse updateBookingStatus(Long bookingId, BookingStatus status) {
         Booking booking = findBookingById(bookingId);
-
         booking.setStatus(status);
 
-        return bookingMapper.toDTO(bookingRepository.save(booking));
+        Booking updateBooking = bookingRepository.save(booking);
+
+        return getResponse(updateBooking);
+    }
+
+    private BookingResponse getResponse(Booking booking) {
+        UserDTO customer = objectMapper
+                .convertValue(Objects.requireNonNull(userFeignClient.getUserById(booking.getCustomerId()).getBody()).data(), UserDTO.class);
+
+        SalonDTO salon = objectMapper
+                .convertValue(Objects.requireNonNull(salonFeignClient.getSalonById(booking.getSalonId()).getBody()).data(), SalonDTO.class);
+
+        Set<ServiceDTO> services = objectMapper.convertValue(
+                Objects.requireNonNull(serviceOfferingFeignClient.getServiceOfferingsByIds(booking.getServiceIds(), salon.id()).getBody()).data(),
+                objectMapper.getTypeFactory().constructCollectionType(Set.class, ServiceDTO.class)
+        );
+
+        return BookingMapper.toDTO(booking, services, salon, customer);
+    }
+
+    private List<BookingResponse> getListResponse(List<Booking> bookings) {
+        return bookings.stream().map(this::getResponse).toList();
     }
 
     @Override

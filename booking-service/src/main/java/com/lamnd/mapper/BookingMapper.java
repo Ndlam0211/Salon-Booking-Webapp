@@ -1,12 +1,31 @@
 package com.lamnd.mapper;
 
-import com.lamnd.common.BaseMapper;
-import com.lamnd.dto.request.BookingCreateRequest;
-import com.lamnd.dto.request.BookingUpdateRequest;
+import com.lamnd.dto.SalonDTO;
+import com.lamnd.dto.ServiceDTO;
+import com.lamnd.dto.UserDTO;
 import com.lamnd.dto.response.BookingResponse;
 import com.lamnd.entity.Booking;
-import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "spring")
-public interface BookingMapper extends BaseMapper<Booking, BookingResponse, BookingCreateRequest, BookingUpdateRequest> {
+import java.util.Set;
+
+public class BookingMapper {
+
+    public static BookingResponse toDTO(Booking booking,
+                                        Set<ServiceDTO> services,
+                                        SalonDTO salon,
+                                        UserDTO customer) {
+        return BookingResponse.builder()
+                .id(booking.getId())
+                .customerId(booking.getCustomerId())
+                .salonId(booking.getSalonId())
+                .serviceIds(booking.getServiceIds())
+                .startTime(booking.getStartTime())
+                .endTime(booking.getEndTime())
+                .status(booking.getStatus())
+                .totalPrice(booking.getTotalPrice())
+                .services(services)
+                .salon(salon)
+                .customer(customer)
+                .build();
+    }
 }
