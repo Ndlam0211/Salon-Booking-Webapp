@@ -19,7 +19,7 @@ public class NotificationEventProducer {
                 .salonId(salonId)
                 .isRead(false)
                 .type("BOOKING")
-                .description("Your booking has been successfully paid.")
+                .description("New booking got confirmed.")
                 .build();
 
         rabbitTemplate.convertAndSend("notification-queue", notification);
