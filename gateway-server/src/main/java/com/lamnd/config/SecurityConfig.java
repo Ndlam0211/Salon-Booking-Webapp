@@ -30,7 +30,7 @@ public class SecurityConfig {
                 .pathMatchers(AppConstant.AUTH_API).permitAll()
                 .pathMatchers(AppConstant.NOTIFICATION_WS_API).permitAll()
                 .pathMatchers(AppConstant.SALON_OWNER_APIs).hasRole("SALON_OWNER")
-                .pathMatchers(AppConstant.PUBLIC_APIs).hasAnyRole(AppConstant.ROLEs)
+                .pathMatchers(AppConstant.PUBLIC_APIs).permitAll()
             )
             .oauth2ResourceServer(oAuth2ResourceServerSpec -> oAuth2ResourceServerSpec
                     .jwt(jwtSpec -> jwtSpec.jwtAuthenticationConverter(grantAuthoritiesConverter())));

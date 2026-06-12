@@ -46,8 +46,7 @@ public class ReviewController {
 
     @GetMapping("/salon/{salonId}")
     public ResponseEntity<List<ReviewDTO>> getReviewsBySalonId(
-            @PathVariable("salonId") Long salonId,
-            @RequestHeader("Authorization") String token) {
+            @PathVariable("salonId") Long salonId) {
 
         List<Review> reviews = reviewService.getReviewsBySalonId(salonId);
 
