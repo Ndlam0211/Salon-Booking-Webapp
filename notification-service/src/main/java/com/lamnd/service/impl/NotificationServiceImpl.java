@@ -21,6 +21,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepo notificationRepo;
     private final BookingFeignClient bookingFeignClient;
     private final ObjectMapper objectMapper;
+    private final RealTimeCommunicationServiceImpl realTimeCommunicationService;
 
     @Override
     public NotificationResponse createNotification(Notification notification) {
@@ -32,9 +33,11 @@ public class NotificationServiceImpl implements NotificationService {
         BookingDTO bookingDTO = objectMapper.convertValue(
                 bookingResponse.data(), BookingDTO.class);
 
-        return NotificationMapper.toDTO(
-                savedNotification,
-                bookingDTO);
+        NotificationResponse notificationResponse = NotificationMapper.toDTO(savedNotification, bookingDTO);
+
+        realTimeCommunicationService.sendNotification(notificationResponse);
+
+        return notificationResponse;
     }
 
     @Override

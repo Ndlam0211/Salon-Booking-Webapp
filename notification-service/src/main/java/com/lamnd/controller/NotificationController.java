@@ -38,4 +38,12 @@ public class NotificationController {
         NotificationResponse response = notificationService.markNotificationAdRead(notificationId);
         return ResponseEntity.ok(response);
     }
+
+//    @PostMapping("/dummy")
+//    public ResponseEntity<?> dummyController(
+//            @RequestBody Notification notification) {
+//
+//        NotificationResponse response = notificationService.createNotification(notification);
+//        return ResponseEntity.ok(response);
+//    }
 }

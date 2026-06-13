@@ -3,7 +3,7 @@ package com.lamnd.config;
 public class AppConstant {
 
     public static final String AUTH_API = "/api/v1/auth/**";
-    public static final String NOTIFICATION_WS_API = "/api/v1/notification/ws/**";
+    public static final String NOTIFICATION_WS_API = "/api/v1/notifications/ws/**";
     public static final String[] PUBLIC_APIs = {
             "/api/v1/salons/**",
             "/api/v1/categories/**",
