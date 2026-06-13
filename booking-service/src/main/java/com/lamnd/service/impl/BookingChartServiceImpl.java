@@ -1,7 +1,9 @@
 package com.lamnd.service.impl;
 
+import com.lamnd.dto.response.BookingResponse;
 import com.lamnd.entity.Booking;
 import com.lamnd.enums.BookingStatus;
+import com.lamnd.service.BookingChartService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -11,15 +13,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class BookingChartServiceImpl {
+public class BookingChartServiceImpl implements BookingChartService {
 
     // generate daily earnings chart data
-    public List<Map<String, Object>> generateDailyEarningsChartData(List<Booking> bookings) {
+    @Override
+    public List<Map<String, Object>> generateDailyEarningsChartData(List<BookingResponse> bookings) {
         // group bookings by date and calculate total earnings for each date
         Map<String, Double> earningsByDay = bookings.stream()
                 .collect(Collectors.groupingBy(
-                        booking -> booking.getCreatedAt().toLocalDate().toString(),
-                        Collectors.summingDouble(Booking::getTotalPrice)
+                        booking -> booking.startTime().toLocalDate().toString(),
+                        Collectors.summingDouble(BookingResponse::totalPrice)
                 ));
 
         // convert the earningsByDay map to a list of maps suitable for charting
@@ -27,12 +30,13 @@ public class BookingChartServiceImpl {
     }
 
     // generate daily bookings chart data
-    public List<Map<String, Object>> generateDailyBookingsChartData(List<Booking> bookings) {
+    @Override
+    public List<Map<String, Object>> generateDailyBookingsChartData(List<BookingResponse> bookings) {
         // group bookings by date and count the number of bookings for each date
         Map<String, Long> bookingsByDay = bookings.stream()
-                .filter(booking -> booking.getStatus() == BookingStatus.CONFIRMED) // filter out bookings
+                .filter(booking -> booking.status() == BookingStatus.CONFIRMED) // filter out bookings
                 .collect(Collectors.groupingBy(
-                        booking -> booking.getCreatedAt().toLocalDate().toString(),
+                        booking -> booking.startTime().toLocalDate().toString(),
                         Collectors.counting()
                 ));
 
