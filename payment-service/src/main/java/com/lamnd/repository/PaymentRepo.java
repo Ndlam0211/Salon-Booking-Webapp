@@ -8,3 +8,4 @@ import org.springframework.stereotype.Repository;
 public interface PaymentRepo extends JpaRepository<Payment, Long> {
     Payment findByPaymentLinkId(String id);
 }
+
