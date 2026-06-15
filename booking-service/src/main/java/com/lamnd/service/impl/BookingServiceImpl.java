@@ -18,7 +18,10 @@ import com.lamnd.service.client.SalonFeignClient;
 import com.lamnd.service.client.ServiceOfferingFeignClient;
 import com.lamnd.service.client.UserFeignClient;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,6 +30,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
@@ -37,7 +41,13 @@ public class BookingServiceImpl implements BookingService {
     private final ServiceOfferingFeignClient serviceOfferingFeignClient;
     private final ObjectMapper objectMapper;
 
+    /**
+     * Tạo booking với pessimistic lock để ngăn race condition
+     * Isolation.SERIALIZABLE đảm bảo tính consistency cao nhất
+     * readOnly = false vì cần insert dữ liệu
+     */
     @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE, readOnly = false)
     public BookingResponse createBooking(BookingCreateRequest createRequest,
                                          UserDTO user,
                                          SalonDTO salon,
@@ -49,9 +59,13 @@ public class BookingServiceImpl implements BookingService {
         LocalDateTime bookingStartTime = createRequest.startTime();
         LocalDateTime bookingEndTime = bookingStartTime.plusMinutes(totalDuration);
 
-        Boolean isAvailable = isTimeSlotAvailable(salon, bookingStartTime, bookingEndTime);
+        // CRITICAL SECTION: Lock database rows để ngăn race condition
+        // Kiểm tra availability với pessimistic lock
+        Boolean isAvailable = isTimeSlotAvailableWithLock(salon, bookingStartTime, bookingEndTime);
 
         if (!isAvailable) {
+            log.warn("Booking slot conflict - Salon ID: {}, Start: {}, End: {}",
+                    salon.id(), bookingStartTime, bookingEndTime);
             throw new IllegalArgumentException("Slot is not available, please choose another time");
         }
 
@@ -71,7 +85,11 @@ public class BookingServiceImpl implements BookingService {
         newBooking.setTotalPrice(totalPrice);
         newBooking.setStatus(BookingStatus.PENDING);
 
-        return BookingMapper.toDTO(bookingRepository.save(newBooking), services, salon, user);
+        Booking savedBooking = bookingRepository.save(newBooking);
+        log.info("Booking created successfully - ID: {}, Salon: {}, Customer: {}",
+                savedBooking.getId(), salon.id(), user.id());
+
+        return BookingMapper.toDTO(savedBooking, services, salon, user);
     }
 
     @Override
@@ -96,6 +114,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public BookingResponse updateBookingStatus(Long bookingId, BookingStatus status) {
         Booking booking = findBookingById(bookingId);
         booking.setStatus(status);
@@ -103,25 +122,6 @@ public class BookingServiceImpl implements BookingService {
         Booking updateBooking = bookingRepository.save(booking);
 
         return getResponse(updateBooking);
-    }
-
-    private BookingResponse getResponse(Booking booking) {
-        UserDTO customer = objectMapper
-                .convertValue(Objects.requireNonNull(userFeignClient.getUserById(booking.getCustomerId()).getBody()).data(), UserDTO.class);
-
-        SalonDTO salon = objectMapper
-                .convertValue(Objects.requireNonNull(salonFeignClient.getSalonById(booking.getSalonId()).getBody()).data(), SalonDTO.class);
-
-        Set<ServiceDTO> services = objectMapper.convertValue(
-                Objects.requireNonNull(serviceOfferingFeignClient.getServiceOfferingsByIds(booking.getServiceIds(), salon.id()).getBody()).data(),
-                objectMapper.getTypeFactory().constructCollectionType(Set.class, ServiceDTO.class)
-        );
-
-        return BookingMapper.toDTO(booking, services, salon, customer);
-    }
-
-    private List<BookingResponse> getListResponse(List<Booking> bookings) {
-        return bookings.stream().map(this::getResponse).toList();
     }
 
     @Override
@@ -177,6 +177,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public void updateBookingStatus(Payment payment) {
         Booking existingBooking = findBookingById(payment.getBookingId());
 
@@ -189,8 +190,39 @@ public class BookingServiceImpl implements BookingService {
         return localDateTime.toLocalDate().isEqual(date);
     }
 
+    /**
+     * Kiểm tra time slot availability với pessimistic lock
+     * Sử dụng WRITE lock để ngăn các transaction khác đọc/ghi data
+     */
+    private Boolean isTimeSlotAvailableWithLock(SalonDTO salon, LocalDateTime bookingStartTime, LocalDateTime bookingEndTime) {
+        // Kiểm tra xem booking có nằm trong thời gian hoạt động của salon hay không
+        LocalDateTime salonOpenTime = salon.openingTime().atDate(bookingStartTime.toLocalDate());
+        LocalDateTime salonCloseTime = salon.closingTime().atDate(bookingEndTime.toLocalDate());
+
+        if (bookingStartTime.isBefore(salonOpenTime) || bookingEndTime.isAfter(salonCloseTime)) {
+            throw new IllegalArgumentException("Booking time must be within salon operating hours");
+        }
+
+        // CRITICAL: Lock lấy các booking conflict với pessimistic lock
+        List<Booking> conflictingBookings = bookingRepository.findConflictingBookingsWithLock(
+                salon.id(),
+                bookingStartTime,
+                bookingEndTime
+        );
+
+        // Nếu tìm thấy booking conflict, slot không available
+        if (!conflictingBookings.isEmpty()) {
+            log.debug("Found {} conflicting bookings for salon {}", conflictingBookings.size(), salon.id());
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Kiểm tra time slot availability không có lock (cho read-only operations)
+     */
     private Boolean isTimeSlotAvailable(SalonDTO salon, LocalDateTime bookingStartTime, LocalDateTime bookingEndTime) {
-        // Kiểm tra xem booking co nam trong thoi gian hoat dong cua salon hay khong
         LocalDateTime salonOpenTime = salon.openingTime().atDate(bookingStartTime.toLocalDate());
         LocalDateTime salonCloseTime = salon.closingTime().atDate(bookingEndTime.toLocalDate());
 
@@ -205,11 +237,11 @@ public class BookingServiceImpl implements BookingService {
             LocalDateTime existingEndTime = existingBooking.endTime();
 
             if (bookingStartTime.isBefore(existingEndTime) && bookingEndTime.isAfter(existingStartTime)) {
-                return false; // Slot is not available
+                return false;
             }
 
             if (bookingStartTime.equals(existingStartTime) || bookingEndTime.equals(existingEndTime)) {
-                return false; // Slot is not available
+                return false;
             }
         }
 
@@ -220,4 +252,24 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found with id: " + bookingId));
     }
+
+    private BookingResponse getResponse(Booking booking) {
+        UserDTO customer = objectMapper
+                .convertValue(Objects.requireNonNull(userFeignClient.getUserById(booking.getCustomerId()).getBody()).data(), UserDTO.class);
+
+        SalonDTO salon = objectMapper
+                .convertValue(Objects.requireNonNull(salonFeignClient.getSalonById(booking.getSalonId()).getBody()).data(), SalonDTO.class);
+
+        Set<ServiceDTO> services = objectMapper.convertValue(
+                Objects.requireNonNull(serviceOfferingFeignClient.getServiceOfferingsByIds(booking.getServiceIds(), salon.id()).getBody()).data(),
+                objectMapper.getTypeFactory().constructCollectionType(Set.class, ServiceDTO.class)
+        );
+
+        return BookingMapper.toDTO(booking, services, salon, customer);
+    }
+
+    private List<BookingResponse> getListResponse(List<Booking> bookings) {
+        return bookings.stream().map(this::getResponse).toList();
+    }
+
 }

@@ -1,9 +1,7 @@
 package com.lamnd.entity;
 
 import com.lamnd.enums.BookingStatus;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +15,12 @@ import java.util.Set;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "bookings")
+@Table(name = "bookings", indexes = {
+        @Index(name = "idx_salon_id", columnList = "salonId"),
+        @Index(name = "idx_customer_id", columnList = "customerId"),
+        @Index(name = "idx_salon_start_end_time", columnList = "salonId,startTime,endTime"),
+        @Index(name = "idx_booking_status", columnList = "status")
+})
 public class Booking extends Auditable{
     private Long salonId;
     private Long customerId;
@@ -29,4 +32,7 @@ public class Booking extends Auditable{
 
     private BookingStatus status = BookingStatus.PENDING;
     private Double totalPrice;
+
+    @Version
+    private Long version;
 }
