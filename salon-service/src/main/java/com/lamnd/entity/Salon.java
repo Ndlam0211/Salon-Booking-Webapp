@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -16,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "salons")
-public class Salon extends Auditable {
+public class Salon extends Auditable implements Serializable {
     @Column(nullable = false)
     private String name;
 
