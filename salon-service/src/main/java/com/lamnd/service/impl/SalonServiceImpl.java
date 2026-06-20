@@ -10,6 +10,8 @@ import com.lamnd.mapper.SalonMapper;
 import com.lamnd.repository.SalonRepo;
 import com.lamnd.service.SalonService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,6 +24,7 @@ public class SalonServiceImpl implements SalonService {
     private final SalonMapper salonMapper;
 
     @Override
+    @CacheEvict(value = "salonsCache", allEntries = true)
     public SalonResponse createSalon(SalonCreateRequest request, UserDTO userDTO) {
         Salon salon = salonMapper.toEntity(request);
         salon.setOwnerId(userDTO.id());
@@ -30,6 +33,7 @@ public class SalonServiceImpl implements SalonService {
     }
 
     @Override
+    @Cacheable(value = "salonsCache", key = "'allSalons'")
     public List<SalonResponse> getAllSalons() {
         return salonMapper.toList(salonRepo.findAll());
     }
@@ -53,6 +57,7 @@ public class SalonServiceImpl implements SalonService {
     }
 
     @Override
+    @CacheEvict(value = "salonsCache", allEntries = true)
     public SalonResponse updateSalon(Long salonId, SalonUpdateRequest request, UserDTO userDTO) {
         Salon existingSalon = findSalonById(salonId);
 
@@ -66,6 +71,7 @@ public class SalonServiceImpl implements SalonService {
     }
 
     @Override
+    @CacheEvict(value = "salonsCache", allEntries = true)
     public void deleteSalon(Long salonId, UserDTO userDTO) {
         Salon existingSalon = findSalonById(salonId);
 
